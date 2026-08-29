@@ -124,7 +124,7 @@ div.card-header h1 {
     <label class="form-label">Nama Jenis</label>
     
     <!-- Memanggil class .form-control dari CSS Anda -->
-    <input type="text" name="nama" class="form-control" value="{{ old('nama', $jenis->nama ?? '') }}" required>
+    <input type="text" name="nama" class="form-control" value="{{ old('nama', $jenis->nama ?? '') }}" required  autocomplete="off">
     
     @error('nama')
         <!-- Memanggil class invalid-feedback bawaan untuk pesan eror minimalis -->

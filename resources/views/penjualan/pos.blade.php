@@ -451,7 +451,7 @@ h4.mb-3 {
 
                         <form method="POST" 
                                 action="{{ route('penjualan.update', $sale->id) }}" 
-                                onsubmit="return confirm('Yakin ingin chekout')" class="mt-2">
+                                onsubmit="return confirm('Apakah Anda yakin ingin checkout?')" class="mt-2">
                             @csrf
                             @method('PUT')
                             <select name="payment_method" class="form-select mb-2">

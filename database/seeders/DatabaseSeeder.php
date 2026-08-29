@@ -16,16 +16,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
-            ProdukSeeder::class,
+            JenisSeeder::class,     // 1. Disisipkan di sini agar jenis dibuat sebelum produk
+            ProdukSeeder::class,    // 2. Produk sekarang aman mengambil ID dari JenisSeeder
             PenjualanSeeder::class
         ]);
         
-        $this->call(RoleSeeder::class);
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Baris kode duplikat di bawah ini telah dihapus agar database bersih dan tidak error 
     }
 }

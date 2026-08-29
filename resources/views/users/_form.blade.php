@@ -135,7 +135,7 @@ div.card-header h1 {
     <label class="form-label">Email</label>
     <input type="email" name="email"
            class="form-control @error('email') is-invalid @enderror"
-           value="{{ old('email', $user->email ?? '') }}">
+           value="{{ old('email', $user->email ?? '') }}" autocomplete="off">
     @error('email')
            <div class="invalid-feedback">
             {{ $message }}

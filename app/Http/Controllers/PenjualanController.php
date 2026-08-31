@@ -115,10 +115,14 @@ class PenjualanController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Penjualan $penjualan)
+        public function update(Request $request, Penjualan $penjualan)
     {
+        // Menambahkan kustomisasi teks error ke bahasa Indonesia
         $request->validate([
             'payment_method' => 'required|in:CASH,QRIS'
+        ], [
+            'payment_method.required' => 'Silakan pilih metode pembayaran terlebih dahulu!',
+            'payment_method.in' => 'Metode pembayaran tidak valid!'
         ]);
 
         if ($penjualan->status !== 'OPEN') {
@@ -145,6 +149,7 @@ class PenjualanController extends Controller
             ->route('penjualan.index')
             ->with('success', 'Transaksi berhasil diselesaikan');
     }
+
 
     /**
      * Remove the specified resource from storage.

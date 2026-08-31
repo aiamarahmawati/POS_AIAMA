@@ -215,7 +215,7 @@ table.custom-table tbody tr:hover {
                 @empty
                 <tr>
                     <td colspan="3" class="text-center text-muted py-5">
-                        Belum ada jenis
+                        Data jenis tidak tersedia.
                     </td>
                 </tr>
                 @endforelse

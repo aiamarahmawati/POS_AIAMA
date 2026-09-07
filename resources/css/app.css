@@ -12,8 +12,7 @@
 
 /* ---------- Kustomisasi Kotak Notifikasi Sukses (Alert) ---------- */
 
-.alert-success,
-.alert {
+.alert-success {
     background-color: #F0FDF4 !important;
     /* Hijau super lembut, senada dengan badge kasir */
     color: #15803D !important;

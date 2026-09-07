@@ -232,7 +232,7 @@ span.badge-role.kasir {
         <div class="table-filter-action">
             <form action="{{ route('admin.users') }}" method="GET" class="search-wrapper">
                 <input type="text" name="search" value="{{ request('search') }}" class="search-input"
-                    placeholder="Cari username atau email..." autocomplete="off">
+                    placeholder="Cari nama atau email..." autocomplete="off">
                 <button class="search-btn" type="submit">Cari</button>
             </form>
 

@@ -8,7 +8,6 @@
    HALAMAN TRANSAKSI UTAMA POS / KASIR
    ========================================================================== */
 
-
 /* 1. Mengubah Judul Halaman Atas */
 
 h4.mb-3 {
@@ -19,7 +18,6 @@ h4.mb-3 {
     margin-bottom: 20px !important;
 }
 
-
 /* 2. Merapikan Kotak Pencarian Produk */
 
 .card-body input[placeholder="Cari produk..."] {
@@ -27,7 +25,6 @@ h4.mb-3 {
     border: 1px solid #E2E8F0 !important;
     padding: 10px 14px !important;
 }
-
 
 /* 3. Menyulap Kotak Katalog Produk di Sebelah Kiri */
 
@@ -53,7 +50,6 @@ h4.mb-3 {
     font-size: 13px !important;
 }
 
-
 /* 4. Mengubah Tombol "+" Biru Besar */
 
 .card-body .btn-primary {
@@ -67,7 +63,6 @@ h4.mb-3 {
 .card-body .btn-primary:hover {
     background-color: #0284C7 !important;
 }
-
 
 /* 5. Merapikan Area Tabel Keranjang Belanja Sebelah Kanan */
 
@@ -99,7 +94,6 @@ h4.mb-3 {
     vertical-align: middle !important;
 }
 
-
 /* Kotak Input Qty Kecil di dalam tabel keranjang */
 
 .card table.table-bordered td input.form-control-sm {
@@ -108,7 +102,6 @@ h4.mb-3 {
     text-align: center !important;
     max-width: 70px !important;
 }
-
 
 /* Tombol Hapus Merah Kecil di dalam tabel keranjang */
 
@@ -130,7 +123,6 @@ h4.mb-3 {
     color: #DC2626 !important;
 }
 
-
 /* 6. Menyulap Bagian Footer (Total Harga, Dropdown & Checkout) */
 
 .card-footer {
@@ -139,7 +131,6 @@ h4.mb-3 {
     border-top: 1px solid #E2E8F0 !important;
     padding: 20px !important;
 }
-
 
 /* Tulisan Total Harga Utama (Misal: Rp 7,000) */
 
@@ -154,7 +145,6 @@ h4.mb-3 {
     letter-spacing: -0.5px !important;
 }
 
-
 /* Dropdown Pilih Pembayaran */
 
 .card-footer select.form-select {
@@ -165,7 +155,6 @@ h4.mb-3 {
     color: #1E293B !important;
     margin-bottom: 12px !important;
 }
-
 
 /* TOMBOL UTAMA TRANSAKSI: Tombol Checkout (Hijau Premium) */
 
@@ -187,7 +176,6 @@ h4.mb-3 {
     background-color: #059669 !important;
     /* Hijau lebih dalam saat di-hover */
 }
-
 
 /* TOMBOL SEKUNDER: Tombol Batal Transaksi (Minimalis Halus) */
 
@@ -214,8 +202,6 @@ h4.mb-3 {
 /* ==========================================================================
    KODE PELENGKAP UNTUK MEMBUAT KOTAK CARD PUTIH BERSIH MINIMALIS
    ========================================================================== */
-
-
 /* Membungkus halaman kasir agar rapi, berada di tengah, dan memiliki jarak ideal */
 
 .pos-container {
@@ -223,7 +209,6 @@ h4.mb-3 {
     margin: 0 auto;
     padding: 24px;
 }
-
 
 /* Kotak Card Utama (Meniru persis gaya kotak putih bertingkat pada Tambah Produk) */
 
@@ -237,7 +222,6 @@ h4.mb-3 {
     /* Shadow halus premium */
     overflow: hidden;
 }
-
 
 /* Kepala Kotak untuk Judul Halaman "TAMBAH PENJUALAN BARU" */
 
@@ -257,7 +241,6 @@ h4.mb-3 {
     margin: 0 !important;
 }
 
-
 /* Membatasi tinggi katalog produk di kiri agar sejajar & rapi dengan keranjang di kanan */
 
 .pos-catalog-scroll {
@@ -266,7 +249,6 @@ h4.mb-3 {
     /* Memunculkan scrollbar hanya jika produk penuh */
     padding-right: 8px;
 }
-
 
 /* Mengubah tampilan scrollbar katalog produk agar tipis dan minimalis */
 
@@ -284,7 +266,6 @@ h4.mb-3 {
     border-radius: 4px;
 }
 
-
 /* Membatasi tinggi tabel keranjang belanja agar sejajar seimbang dengan katalog kiri */
 
 .col-md-6 .table-responsive {
@@ -295,7 +276,6 @@ h4.mb-3 {
     border-radius: 8px;
     padding-right: 4px;
 }
-
 
 /* Mengubah tampilan scrollbar keranjang belanja agar tipis halus */
 
@@ -314,18 +294,22 @@ h4.mb-3 {
 }
 
 </style>
-{{-- Pengaman agar program tidak crash jika $errors terkirim sebagai string --}}
-@if (isset($errors) && is_object($errors) && method_exists($errors, 'any') && $errors->any())
+{{-- 1. Menampilkan error validasi bawaan Laravel dengan aman --}}
+@if (isset($errors) && is_object($errors) && $errors->any())
     <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+        {{ $errors->first() }}
     </div>
 @elseif(is_string($errors) && !empty($errors))
+    {{-- Jika variabel $errors terlanjur menjadi string akibat session lama yang tersangkut --}}
     <div class="alert alert-danger">
-        <p class="mb-0">{{ $errors }}</p>
+        {{ $errors }}
+    </div>
+@endif
+
+{{-- 2. Menampilkan error kustom baru Anda dari session flash --}}
+@if (session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
     </div>
 @endif
 

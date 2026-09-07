@@ -275,7 +275,7 @@
                     </div>
                     <div class="col-md-6">
                         <h3>Produk habis stok</h3>
-                        <table class="table">
+                        <table class="table table-hover align-middle mt-2">
                             <thead>
                                 <tr>
                                     <th scope="col">No</th>
@@ -309,7 +309,7 @@
                         <h2>Produk Terlaris</h2>
                     </div>
                     <div class="col-md-12">
-                        <table class="table">
+                        <table class="table table-hover align-middle mt-2">
                             <thead>
                                 <tr>
                                     <th scope="col">Nama</th>
@@ -327,7 +327,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="3" class="text-center">
-                                            Seluruh produk berada dalam kondisi stok aman.
+                                            Belum ada produk yang terjual hari ini.
                                         </td>
                                     </tr>
                                 @endforelse

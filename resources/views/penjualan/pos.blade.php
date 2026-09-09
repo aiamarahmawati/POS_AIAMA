@@ -295,23 +295,28 @@ h4.mb-3 {
 
 </style>
 {{-- 1. Menampilkan error validasi bawaan Laravel dengan aman --}}
-@if (isset($errors) && is_object($errors) && $errors->any())
-    <div class="alert alert-danger">
-        {{ $errors->first() }}
-    </div>
-@elseif(is_string($errors) && !empty($errors))
-    {{-- Jika variabel $errors terlanjur menjadi string akibat session lama yang tersangkut --}}
-    <div class="alert alert-danger">
-        {{ $errors }}
-    </div>
-@endif
+<div id="server-alert-container">
+    @if (isset($errors) && is_object($errors) && $errors->any())
+        <div class="alert alert-danger">
+            {{ $errors->first() }}
+        </div>
+    @elseif(is_string($errors) && !empty($errors))
+        {{-- Jika variabel $errors terlanjur menjadi string akibat session lama yang tersangkut --}}
+        <div class="alert alert-danger">
+            {{ $errors }}
+        </div>
+    @endif
 
-{{-- 2. Menampilkan error kustom baru Anda dari session flash --}}
-@if (session('error'))
-    <div class="alert alert-danger">
-        {{ session('error') }}
-    </div>
-@endif
+    {{-- 2. Menampilkan error kustom baru Anda dari session flash --}}
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+</div>
+
+{{-- 3. Wadah kosong untuk error dari JavaScript (validasi checkout Cash/QRIS) --}}
+<div id="js-alert-container"></div>
 
 
     <!-- 2. KOTAK CARD UTAMA: Membuat wadah putih bertingkat dengan bayangan halus -->
@@ -435,14 +440,17 @@ h4.mb-3 {
 
                         <form method="POST" 
                                 action="{{ route('penjualan.update', $sale->id) }}" 
-                                onsubmit="return confirm('Apakah Anda yakin ingin checkout?')" class="mt-2">
+                                id="form-checkout" class="mt-2">
                             @csrf
                             @method('PUT')
-                            <select name="payment_method" class="form-select mb-2">
+                            <select name="payment_method" id="payment_method" class="form-select mb-2">
                                 <option value="">Pilih Pembayaran</option>
                                 <option value="CASH">Cash</option>
                                 <option value="QRIS">QRIS</option>
                             </select>
+
+                            {{-- Area dinamis: muncul input Uang Masuk & Kembalian jika Cash, atau QR jika QRIS --}}
+                            <div id="area-pembayaran" class="mb-2"></div>
 
                             <button class="btn btn-success w-100 {{ $sale->status === 'COMPLETED' ? 'disabled' : '' }}">
                                 Checkout
@@ -469,4 +477,116 @@ h4.mb-3 {
     </div> <!-- Akhir dari pos-card-main -->
 
 </div> <!-- Akhir dari pos-container -->
+
+{{-- ============================================================
+     TAMBAHAN: Script untuk fitur Cash (uang masuk & kembalian)
+     dan QRIS (tampilkan QR code) saat memilih metode pembayaran
+     ============================================================ --}}
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+    const totalHargaPOS = {{ $sale->total_pembayaran }};
+    const cartIsEmptyPOS = {{ $sale->itemPenjualan->count() === 0 ? 'true' : 'false' }};
+
+    document.getElementById('payment_method').addEventListener('change', function () {
+        const area = document.getElementById('area-pembayaran');
+        const metode = this.value;
+
+        if (metode === 'CASH') {
+            area.innerHTML = `
+                <label class="form-label">Uang Masuk</label>
+                <input type="number" name="uang_masuk" id="uang_masuk"
+                       class="form-control mb-1" placeholder="Masukkan nominal uang">
+                <div class="text-end">
+                    <span class="text-muted">Kembalian: </span>
+                    <strong id="kembalian-text">Rp 0</strong>
+                </div>
+            `;
+
+            document.getElementById('uang_masuk').addEventListener('input', function () {
+                const bayar = parseInt(this.value) || 0;
+                const kembalian = bayar - totalHargaPOS;
+                document.getElementById('kembalian-text').innerText =
+                    'Rp ' + (kembalian > 0 ? kembalian.toLocaleString('id-ID') : 0);
+                clearJsError();
+            });
+
+        } else if (metode === 'QRIS') {
+            area.innerHTML = `
+                <div class="text-center border rounded p-3">
+                    <p class="mb-2 text-muted" style="font-size:13px;">
+                        Scan untuk membayar Rp ${totalHargaPOS.toLocaleString('id-ID')}
+                    </p>
+                    <div id="qr-canvas-wrapper" class="d-flex justify-content-center"></div>
+                </div>
+            `;
+            generateQRISPOS(totalHargaPOS, {{ $sale->id }});
+        } else {
+            area.innerHTML = '';
+        }
+    });
+
+    function generateQRISPOS(total, saleId) {
+        const wrapper = document.getElementById('qr-canvas-wrapper');
+        const canvas = document.createElement('canvas');
+        QRCode.toCanvas(canvas, `SALE:${saleId}|TOTAL:${total}`, { width: 180 }, function (error) {
+            if (error) {
+                console.error(error);
+                wrapper.innerHTML = '<span class="text-danger">Gagal membuat QR code</span>';
+                return;
+            }
+            wrapper.appendChild(canvas);
+        });
+    }
+
+    document.getElementById('form-checkout').addEventListener('submit', function (e) {
+        if (cartIsEmptyPOS) {
+            showJsError('Keranjang masih kosong');
+            e.preventDefault();
+            return;
+        }
+
+        const metode = document.getElementById('payment_method').value;
+
+        if (!metode) {
+            showJsError('Silakan pilih metode pembayaran terlebih dahulu');
+            e.preventDefault();
+            return;
+        }
+
+        if (metode === 'CASH') {
+            const bayarInput = document.getElementById('uang_masuk');
+            const bayar = parseInt(bayarInput.value) || 0;
+            if (bayar < totalHargaPOS) {
+                showJsError('Uang masuk kurang dari total harga');
+                e.preventDefault();
+                return;
+            }
+        }
+
+        clearJsError();
+
+        if (!confirm('Apakah Anda yakin ingin checkout?')) {
+            e.preventDefault();
+        }
+    });
+
+    // Menampilkan kotak error merah dengan gaya sama seperti error dari server (session('error')).
+    // Juga menghapus kotak error lama dari server, supaya tidak numpuk dua kotak sekaligus.
+    function showJsError(message) {
+        const serverContainer = document.getElementById('server-alert-container');
+        if (serverContainer) serverContainer.innerHTML = '';
+
+        const container = document.getElementById('js-alert-container');
+        container.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Menghapus kotak error JS, dipanggil saat user mulai memperbaiki input
+    function clearJsError() {
+        document.getElementById('js-alert-container').innerHTML = '';
+    }
+
+    // Bersihkan pesan error otomatis saat user mengganti metode pembayaran atau mengetik ulang uang masuk
+    document.getElementById('payment_method').addEventListener('change', clearJsError);
+</script>
 @endsection

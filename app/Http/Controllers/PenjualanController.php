@@ -115,14 +115,18 @@ class PenjualanController extends Controller
     /**
      * Update the specified resource in storage.
      */
-        public function update(Request $request, Penjualan $penjualan)
+    public function update(Request $request, Penjualan $penjualan)
     {
         // Menambahkan kustomisasi teks error ke bahasa Indonesia
         $request->validate([
-            'payment_method' => 'required|in:CASH,QRIS'
+            'payment_method' => 'required|in:CASH,QRIS',
+            'uang_masuk'     => 'required_if:payment_method,CASH|nullable|numeric|min:0',
         ], [
             'payment_method.required' => 'Silakan pilih metode pembayaran terlebih dahulu!',
-            'payment_method.in' => 'Metode pembayaran tidak valid!'
+            'payment_method.in'       => 'Metode pembayaran tidak valid!',
+            'uang_masuk.required_if'  => 'Uang masuk wajib diisi untuk pembayaran Cash!',
+            'uang_masuk.numeric'      => 'Uang masuk harus berupa angka!',
+            'uang_masuk.min'          => 'Uang masuk tidak boleh negatif!',
         ]);
 
         if ($penjualan->status !== 'OPEN') {
@@ -133,14 +137,32 @@ class PenjualanController extends Controller
             return back()->with('errors', 'Keranjang masih kosong');
         }
 
-        DB::transaction(function () use ($penjualan, $request) {
+        // Hitung ulang total (anti manipulasi) SEBELUM masuk transaction,
+        // karena kita butuh angka ini untuk validasi uang masuk Cash
+        $total = $penjualan->itemPenjualan()->sum('subtotal');
 
-            // Hitung ulang total (anti manipulasi)
-            $total = $penjualan->itemPenjualan()->sum('subtotal');
+        $uangMasuk = 0;
+        $kembalian = 0;
 
+        if ($request->payment_method === 'CASH') {
+            $uangMasuk = (int) $request->uang_masuk;
+
+            // Validasi ulang di server (anti manipulasi, jangan percaya JS)
+            if ($uangMasuk < $total) {
+                return back()
+                    ->withInput()
+                    ->with('errors', 'Uang masuk kurang dari total pembayaran');
+            }
+
+            $kembalian = $uangMasuk - $total;
+        }
+
+        DB::transaction(function () use ($penjualan, $request, $total, $uangMasuk, $kembalian) {
             $penjualan->update([
                 'metode_pembayaran' => $request->payment_method,
                 'total_pembayaran'  => $total,
+                'uang_masuk'        => $uangMasuk,
+                'kembalian'         => $kembalian,
                 'status'            => 'COMPLETED'
             ]);
         });

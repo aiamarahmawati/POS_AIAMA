@@ -208,6 +208,21 @@
                 <h5><strong>TOTAL BAYAR:</strong></h5>
                 <h5 class="text-primary"><strong>Rp {{ number_format($sale->total_pembayaran) }}</strong></h5>
             </div>
+
+            {{-- Tampilkan Uang Masuk & Kembalian khusus untuk transaksi Cash --}}
+            @if ($sale->metode_pembayaran === 'CASH')
+            <div class="row small mt-2">
+                <div class="col-6">Uang Masuk:</div>
+                <div class="col-6 text-end">Rp {{ number_format($sale->uang_masuk) }}</div>
+            </div>
+            <div class="row small">
+                <div class="col-6">Kembalian:</div>
+                <div class="col-6 text-end">Rp {{ number_format($sale->kembalian) }}</div>
+            </div>
+            @endif
+
+            <div class="invoice-dashed-line"></div>
+            <p class="text-center small text-muted mb-0">Terima kasih telah berbelanja</p>
         </div>
     </div>
 </div>

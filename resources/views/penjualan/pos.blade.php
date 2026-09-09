@@ -496,8 +496,8 @@ h4.mb-3 {
                 <label class="form-label">Uang Masuk</label>
                 <input type="number" name="uang_masuk" id="uang_masuk"
                        class="form-control mb-1" placeholder="Masukkan nominal uang">
-                <div class="text-end">
-                    <span class="text-muted">Kembalian: </span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span class="text-muted">Kembalian:</span>
                     <strong id="kembalian-text">Rp 0</strong>
                 </div>
             `;

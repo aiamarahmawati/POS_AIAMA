@@ -78,7 +78,7 @@
     <div class="card position-absolute top-50 start-50 translate-middle w-100" style="max-width: 400px; padding: 0 12px;">
       
       <div class="card-header" style="border: none !important; border-bottom: none !important;">
-         <h1>LOGIN POS</h1>
+         <h1>LOGIN KEDAI MERCON</h1>
       </div>
       
       <div class="card-body">

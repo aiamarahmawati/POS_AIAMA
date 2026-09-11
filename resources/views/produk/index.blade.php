@@ -242,6 +242,116 @@
             border-color: #CBD5E1 !important;
             color: #1E293B !important;
         }
+
+        /* ==========================================================================
+           MODAL KONFIRMASI KUSTOM (pengganti popup bawaan browser confirm())
+           ========================================================================== */
+
+        .custom-confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .custom-confirm-overlay.show {
+            display: flex;
+        }
+
+        .custom-confirm-box {
+            background: #FFFFFF;
+            border-radius: 14px;
+            max-width: 360px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.25);
+            text-align: center;
+            animation: customConfirmPop 0.15s ease;
+        }
+
+        @keyframes customConfirmPop {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .custom-confirm-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #EFF6FF;
+            color: #0EA5E9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .custom-confirm-icon.danger {
+            background: #FEF2F2;
+            color: #EF4444;
+        }
+
+        .custom-confirm-message {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .custom-confirm-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .custom-confirm-btn {
+            flex: 1;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .custom-confirm-btn-cancel {
+            background: #F1F5F9;
+            color: #475569;
+        }
+
+        .custom-confirm-btn-cancel:hover {
+            background: #E2E8F0;
+        }
+
+        .custom-confirm-btn-ok {
+            background: #0EA5E9;
+            color: #FFFFFF;
+        }
+
+        .custom-confirm-btn-ok:hover {
+            background: #0284C7;
+        }
+
+        .custom-confirm-btn-ok.danger {
+            background: #EF4444;
+        }
+
+        .custom-confirm-btn-ok.danger:hover {
+            background: #DC2626;
+        }
     </style>
 
     <div class="container mt-4">
@@ -273,7 +383,7 @@
                         <th style="width: 80px;">Foto</th>
                         <th>Nama</th>
                         <th>Jenis</th>
-                        <th>Harga Beli</th>
+                        <th>Harga Pokok</th>
                         <th>Harga Jual</th>
                         <th style="width: 90px;">Stok</th>
                         @if (auth()->user()->role_id === 1)
@@ -313,12 +423,14 @@
                                     @endcan
                                     @can('delete', $product)
                                         <form action="{{ route('produk.destroy', $product) }}" method="POST"
-                                            class="d-inline m-0 p-0">
+                                            class="d-inline m-0 p-0"
+                                            data-confirm="Apakah Anda yakin akan menghapus produk &quot;{{ $product->nama }}&quot;?"
+                                            data-confirm-danger="true"
+                                            data-confirm-ok-text="Ya, Hapus">
                                             @csrf
                                             @method('DELETE')
                                             <button class="btn btn-action-delete py-1 px-2 lh-sm"
-                                                style="font-size: 13px !important;"
-                                                onclick="return confirm('Apakah Anda yakin akan menghapus produk ini?')">
+                                                style="font-size: 13px !important;">
                                                 Hapus
                                             </button>
                                         </form>
@@ -343,4 +455,70 @@
             {{ $products->links() }}
         </div>
     </div>
+
+    {{-- Modal konfirmasi kustom bertema POS (pengganti confirm() bawaan browser) --}}
+    <div class="custom-confirm-overlay" id="customConfirmOverlay">
+        <div class="custom-confirm-box">
+            <div class="custom-confirm-icon" id="customConfirmIcon">?</div>
+            <div class="custom-confirm-message" id="customConfirmMessage">Apakah Anda yakin?</div>
+            <div class="custom-confirm-actions">
+                <button type="button" class="custom-confirm-btn custom-confirm-btn-cancel" id="customConfirmCancelBtn">Batal</button>
+                <button type="button" class="custom-confirm-btn custom-confirm-btn-ok" id="customConfirmOkBtn">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const overlay = document.getElementById('customConfirmOverlay');
+        const msgEl = document.getElementById('customConfirmMessage');
+        const okBtn = document.getElementById('customConfirmOkBtn');
+        const cancelBtn = document.getElementById('customConfirmCancelBtn');
+        const iconEl = document.getElementById('customConfirmIcon');
+        let pendingCallback = null;
+
+        window.showCustomConfirm = function (message, onConfirm, opts) {
+            opts = opts || {};
+            msgEl.textContent = message;
+            iconEl.textContent = opts.danger ? '!' : '?';
+            iconEl.classList.toggle('danger', !!opts.danger);
+            okBtn.classList.toggle('danger', !!opts.danger);
+            okBtn.textContent = opts.okText || 'Ya, Lanjutkan';
+            pendingCallback = onConfirm;
+            overlay.classList.add('show');
+        };
+
+        function closeCustomConfirm() {
+            overlay.classList.remove('show');
+            pendingCallback = null;
+        }
+
+        okBtn.addEventListener('click', function () {
+            const callback = pendingCallback;
+            closeCustomConfirm();
+            if (callback) callback();
+        });
+
+        cancelBtn.addEventListener('click', closeCustomConfirm);
+
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeCustomConfirm();
+        });
+
+        // Menangani otomatis semua <form data-confirm="..."> di halaman ini
+        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (form.dataset.confirmed === 'true') return;
+                e.preventDefault();
+                showCustomConfirm(form.dataset.confirm, function () {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }, {
+                    danger: form.dataset.confirmDanger === 'true',
+                    okText: form.dataset.confirmOkText
+                });
+            });
+        });
+    })();
+    </script>
 @endsection

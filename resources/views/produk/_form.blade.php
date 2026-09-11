@@ -188,7 +188,7 @@ div.card-header h1 {
     @enderror
 </div>
 <div class="mb-3">
-    <label class="form-label">Harga Beli</label>
+    <label class="form-label">Harga Pokok</label>
     <input type="number" name="purchase_price"
            class="form-control @error('purchase_price') is-invalid @enderror"
            value="{{ old('purchase_price', $produk->harga_beli ?? '') }}">

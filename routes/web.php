@@ -8,6 +8,7 @@ use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\JenisController;
+use App\Http\Controllers\TentangController; // <-- tambahkan ini
 
 Route::get('/login', [AuthController::class, 'index'])->name('login');
 
@@ -20,10 +21,10 @@ Route::middleware(('guest'))->group(function () {
 // route yang bisa diakses ketika user sudah login
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/tentang', [TentangController::class, 'index'])->name('tentang'); // <-- tambahkan ini
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->group(function () {
-        // Tambahkan ->parameters() di akhir resource route Anda
         Route::resource('jenis', JenisController::class)->parameters([
             'jenis' => 'jenis'
         ]);

@@ -344,7 +344,7 @@
             @endif
 
             <hr class="receipt-dashed">
-            <div class="receipt-thanks">Terima kasih telah berbelanja</div>
+            <div class="receipt-thanks">Terima kasih</div>
 
         </div>
     </div>

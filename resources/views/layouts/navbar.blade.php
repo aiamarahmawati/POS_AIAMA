@@ -99,10 +99,11 @@
 </style>
 
 <!-- Pastikan load CDN Bootstrap Icons di paling atas jika belum ada -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://jsdelivr.net">
 
 <nav class="navbar navbar-expand pos-navbar">
-  <div class="container-fluid px-4">
+  <!-- MENGGUNAKAN container-fluid AGAR LOGO TETAP DI KIRI, DAN BERI pe-5 AGAR SISI KANAN (LOGOUT) MEMILIKI JARAK AMAN -->
+  <div class="container-fluid ps-4 pe-5">
     <div class="navbar-brand-wrap">
       <!-- LOGO BARU KODE: Menggantikan emoticon sate lama dengan ikon Api Mercon Modern -->
       <span class="navbar-brand-logo-custom">
@@ -115,7 +116,6 @@
       <li class="nav-item">
         <a class="nav-link {{ Request::is('dashboard') ? 'active' : '' }}" aria-current="page" href="{{ route('dashboard') }}">Dashboard</a>
       </li>
-      
       {{-- Menu users hanya untuk admin (role_id = 1) --}}
       @if(auth()->user()->role_id === 1)
         <li class="nav-item">
@@ -138,7 +138,8 @@
       </li>
     </ul>
 
-    <form action="{{ route('logout') }}" method="POST" class="d-flex">
+    <!-- DIBERI me-3 PADA FORM UNTUK JALUR AMAN TAMBAHAN AGAR LOGOUT SEMAKIN PROPORSIONAL -->
+    <form action="{{ route('logout') }}" method="POST" class="d-flex me-3">
       @csrf
       <button type="submit" class="btn btn-danger">Logout</button>
     </form>

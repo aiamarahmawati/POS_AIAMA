@@ -246,8 +246,15 @@ h4.mb-3 {
 .pos-catalog-scroll {
     max-height: 490px;
     overflow-y: auto;
-    /* Memunculkan scrollbar hanya jika produk penuh */
+    overflow-x: hidden;
+    /* Memunculkan scrollbar vertikal saja kalau produk penuh, scrollbar
+       horizontal sengaja dimatikan supaya tidak muncul garis abu-abu
+       di bawah daftar produk */
     padding-right: 8px;
+}
+
+.pos-catalog-scroll form.row {
+    overflow: hidden;
 }
 
 /* Mengubah tampilan scrollbar katalog produk agar tipis dan minimalis */

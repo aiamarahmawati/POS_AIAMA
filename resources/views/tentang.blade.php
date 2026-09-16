@@ -190,7 +190,7 @@
             </div>
 
             <!-- Fitur Utama -->
-            <div class="card">
+            {{-- <div class="card">
                 <div class="card-header text-center">
                     Fitur Utama
                 </div>
@@ -204,7 +204,7 @@
                         <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Pencatatan transaksi penjualan</div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Alamat -->
             <div class="card shadow-sm">

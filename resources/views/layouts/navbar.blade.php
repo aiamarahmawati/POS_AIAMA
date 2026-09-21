@@ -268,7 +268,7 @@
         {{-- Menu users hanya untuk admin (role_id = 1) --}}
         @if(auth()->user()->role_id === 1)
           <li class="nav-item">
-            <a class="nav-link {{ Request::is('admin/users*') ? 'active' : '' }}" href="{{ route('admin.users') }}">Users</a>
+            <a class="nav-link {{ Request::is('admin/users*') ? 'active' : '' }}" href="{{ route('admin.users') }}">Pengguna</a>
           </li>
         @endif
 
@@ -277,6 +277,10 @@
             <a class="nav-link {{ Request::is('jenis') ? 'active' : '' }}" href="{{ route('jenis.index') }}">Jenis</a>
           </li>
         @endif
+
+        <li class="nav-item">
+          <a class="nav-link {{ Request::is('paket') ? 'active' : '' }}" href="{{ route('paket.index') }}">Paket</a>
+        </li>
 
         <li class="nav-item">
           <a class="nav-link {{ Request::is('produk') ? 'active' : '' }}" href="{{ route('produk.index') }}">Produk</a>

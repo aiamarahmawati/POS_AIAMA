@@ -300,6 +300,34 @@ h4.mb-3 {
     border-radius: 4px;
 }
 
+/* Tab pemilih Produk / Paket di katalog kiri */
+
+.pos-catalog-tabs {
+    border-bottom: 1px solid #E2E8F0 !important;
+    gap: 4px;
+}
+
+.pos-catalog-tabs .nav-link {
+    border: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    color: #64748B !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    background: transparent !important;
+}
+
+.pos-catalog-tabs .nav-link:hover {
+    color: #1E293B !important;
+    background: #F8FAFC !important;
+}
+
+.pos-catalog-tabs .nav-link.active {
+    color: #0EA5E9 !important;
+    background: #F0F9FF !important;
+    border-bottom: 2px solid #0EA5E9 !important;
+}
+
 /* ==========================================================================
    MODAL KONFIRMASI KUSTOM (pengganti popup bawaan browser confirm())
    ========================================================================== */
@@ -453,63 +481,124 @@ h4.mb-3 {
         
         <!-- 3. KEPALA KOTAK BARU: Menyulap judul halaman masuk ke baris atas kardus yang rapi -->
         <div class="pos-card-header">
-            <h4>{{ $mode === 'edit' ? 'Edit Penjualan' : 'Tambah Penjualan' }}</h4>
+            <h4>Transaksi Kasir {{ $sale->id }} {{ $sale->itemPenjualan->count() === 0 ? '(Baru)' : '' }}</h4>
         </div>
 
         <!-- ISI TRANSAKSI KASIR -->
         <div class="card-body">
             <div class="row">
                 
-                {{-- ================= PRODUK (SISI KIRI) ================= --}}
+                {{-- ================= PRODUK & PAKET (SISI KIRI) ================= --}}
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <form method="GET" action="{{ route('penjualan.create') }}">
+                        <form method="GET" action="{{ route('penjualan.edit', $sale->id) }}">
                             <input type="text"
                                    name="search"
                                    value="{{ request('search') }}"
                                    class="form-control"
-                                   placeholder="Cari produk..."
+                                   placeholder="Cari produk / paket..."
                                    onkeyup="this.form.submit()">
                         </form>
                     </div>
-                    
-                    <!-- 4. PEMBATAS SCROLLBAR: Membaca kelas baru Anda untuk membatasi tinggi katalog produk -->
-                    <div class="pos-catalog-scroll">
-                        @foreach($products as $product)
-                            <form method="POST" action="{{ route('itempenjualan.store') }}" class="row mb-2">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-                                <div class="col-7">
-                                    <button class="btn btn-outline-primary w-100 text-start p-2 {{ $sale->status === 'COMPLETED' ? 'disabled' : '' }}">
-                                        <div class="d-flex align-items-center gap-2">
+                    {{-- Tab pemilih: Produk satuan atau Paket bundle --}}
+                    <ul class="nav nav-tabs pos-catalog-tabs mb-3" id="posCatalogTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-produk-btn" data-bs-toggle="tab"
+                                    data-bs-target="#tab-produk" type="button" role="tab">
+                                Produk
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-paket-btn" data-bs-toggle="tab"
+                                    data-bs-target="#tab-paket" type="button" role="tab">
+                                Paket
+                            </button>
+                        </li>
+                    </ul>
 
-                                            {{-- Gambar produk --}}
-                                            <img src="{{ asset('storage/'.$product->foto) }}" 
-                                                alt="Gambar"
-                                                class="rounded-circle"
-                                                style="width:45px; height:45px; object-fit:cover;">
+                    <div class="tab-content" id="posCatalogTabContent">
 
-                                            {{-- Nama & harga --}}
-                                            <div>
-                                                <div class="fw-semibold">{{ $product->nama }}</div>
-                                                <small class="text-muted">{{ number_format($product->harga_jual) }}</small>
-                                            </div>
+                        {{-- ---------- TAB: PRODUK SATUAN ---------- --}}
+                        <div class="tab-pane fade show active" id="tab-produk" role="tabpanel">
+                            <div class="pos-catalog-scroll">
+                                @forelse($products as $product)
+                                    <form method="POST" action="{{ route('itempenjualan.store') }}" class="row mb-2">
+                                        @csrf
+                                        <input type="hidden" name="penjualan_id" value="{{ $sale->id }}">
+                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                                        <div class="col-7">
+                                            <button class="btn btn-outline-primary w-100 text-start p-2 {{ $sale->status === 'COMPLETED' ? 'disabled' : '' }}">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <img src="{{ asset('storage/'.$product->foto) }}"
+                                                        alt="Gambar"
+                                                        class="rounded-circle"
+                                                        style="width:45px; height:45px; object-fit:cover;">
+                                                    <div>
+                                                        <div class="fw-semibold">{{ $product->nama }}</div>
+                                                        <small class="text-muted">{{ number_format($product->harga_jual) }}</small>
+                                                    </div>
+                                                </div>
+                                            </button>
                                         </div>
-                                    </button>
-                                </div>
 
-                                <div class="col-3">
-                                    <input type="number" name="quantity" value="1" min="1"
-                                            class="form-control {{ $sale->status === 'COMPLETED' ? 'readonly' : '' }}">
-                                </div>
+                                        <div class="col-3">
+                                            <input type="number" name="quantity" value="1" min="1"
+                                                    class="form-control {{ $sale->status === 'COMPLETED' ? 'readonly' : '' }}">
+                                        </div>
 
-                                <div class="col-2">
-                                    <button class="btn btn-primary w-100 {{ $sale->status === 'COMPLETED' ? 'disabled' : '' }}">
-                                        +</button>
-                                </div>
-                            </form>
-                        @endforeach
+                                        <div class="col-2">
+                                            <button class="btn btn-primary w-100 {{ $sale->status === 'COMPLETED' ? 'disabled' : '' }}">
+                                                +</button>
+                                        </div>
+                                    </form>
+                                @empty
+                                    <p class="text-muted text-center py-4 mb-0">Produk tidak ditemukan.</p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        {{-- ---------- TAB: PAKET / BUNDLE ---------- --}}
+                        <div class="tab-pane fade" id="tab-paket" role="tabpanel">
+                            <div class="pos-catalog-scroll">
+                                @forelse($packages as $package)
+                                    <form method="POST" action="{{ route('itempenjualan.store') }}" class="row mb-2">
+                                        @csrf
+                                        <input type="hidden" name="penjualan_id" value="{{ $sale->id }}">
+                                        <input type="hidden" name="paket_id" value="{{ $package->id }}">
+
+                                        <div class="col-7">
+                                            <button class="btn btn-outline-primary w-100 text-start p-2 {{ $sale->status === 'COMPLETED' ? 'disabled' : '' }}">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <img src="{{ asset('storage/'.$package->foto) }}"
+                                                        alt="Gambar"
+                                                        class="rounded-circle"
+                                                        style="width:45px; height:45px; object-fit:cover;">
+                                                    <div>
+                                                        <div class="fw-semibold">{{ $package->nama }}</div>
+                                                        <small class="text-muted">{{ number_format($package->harga_jual) }}</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </div>
+
+                                        <div class="col-3">
+                                            <input type="number" name="quantity" value="1" min="1"
+                                                    class="form-control {{ $sale->status === 'COMPLETED' ? 'readonly' : '' }}">
+                                        </div>
+
+                                        <div class="col-2">
+                                            <button class="btn btn-primary w-100 {{ $sale->status === 'COMPLETED' ? 'disabled' : '' }}">
+                                                +</button>
+                                        </div>
+                                    </form>
+                                @empty
+                                    <p class="text-muted text-center py-4 mb-0">Belum ada paket.</p>
+                                @endforelse
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -529,8 +618,13 @@ h4.mb-3 {
                             <tbody>
                                 @forelse($sale->itemPenjualan as $item)
                                 <tr>
-                                    <td>{{ $item->produk->nama }}</td>
-                                    <td>Rp.{{ number_format($item->produk->harga_jual) }}</td>
+                                    <td>
+                                        {{ $item->nama_item }}
+                                        @if ($item->is_paket)
+                                            <span class="badge bg-info text-dark ms-1" style="font-size: 10px;">Paket</span>
+                                        @endif
+                                    </td>
+                                    <td>Rp.{{ number_format($item->harga_satuan) }}</td>
                                     <td>
                                         <form method="POST" action="{{ route('itempenjualan.update', $item->id) }}">
                                             @csrf @method('PUT')

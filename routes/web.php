@@ -6,10 +6,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ItemPenjualanController;
 use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\ProdukController;
-use App\Http\Controllers\PaketController; // <-- ditambahkan
+use App\Http\Controllers\PaketController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\JenisController;
-use App\Http\Controllers\TentangController; // <-- tambahkan ini
+use App\Http\Controllers\TentangController;
+use App\Http\Controllers\LaporanController; // <-- ditambahkan
 
 Route::get('/login', [AuthController::class, 'index'])->name('login');
 
@@ -22,7 +23,7 @@ Route::middleware(('guest'))->group(function () {
 // route yang bisa diakses ketika user sudah login
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/tentang', [TentangController::class, 'index'])->name('tentang'); // <-- tambahkan ini
+    Route::get('/tentang', [TentangController::class, 'index'])->name('tentang');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->group(function () {
@@ -42,8 +43,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('role:admin,kasir')->group(function () {
         Route::resource('/produk', ProdukController::class,);
-        Route::resource('/paket', PaketController::class); // <-- ditambahkan
+        Route::resource('/paket', PaketController::class);
         Route::resource('/penjualan', PenjualanController::class);
         Route::resource('/itempenjualan', ItemPenjualanController::class);
+        Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index'); // <-- ditambahkan
     });
 });

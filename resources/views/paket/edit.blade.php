@@ -3,8 +3,8 @@
 @section('title', 'Edit Paket')
 
 @section('content')
-<div class="position-relative w-100" style="min-height: 80vh; padding-top: 40px;">
-    <div class="position-absolute start-50 translate-middle-x w-100" style="max-width: 700px; padding: 0 16px;">
+<div class="d-flex justify-content-center" style="padding-top: 40px; padding-bottom: 40px;">
+    <div class="w-100" style="max-width: 700px; padding: 0 16px;">
         <div class="card bg-white">
             <div class="card-header">
                 <h1>Edit Paket</h1>

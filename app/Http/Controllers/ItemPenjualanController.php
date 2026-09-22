@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemPenjualan;
+use App\Models\Paket;
 use App\Models\Penjualan;
 use App\Models\Produk;
 use Illuminate\Http\Request;
@@ -29,33 +30,68 @@ class ItemPenjualanController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
+     * PERUBAHAN: sekarang WAJIB kirim penjualan_id (transaksi mana yang
+     * sedang dibuka di layar kasir). Sebelumnya method ini menebak sendiri
+     * "transaksi OPEN milik user ini" lewat query tanpa id — itu cuma aman
+     * kalau tiap kasir cuma boleh punya 1 transaksi OPEN sekaligus. Sekarang
+     * kasir bisa punya banyak transaksi tertunda, jadi harus eksplisit biar
+     * produk/paket yang ditambahkan tidak salah nyangkut ke transaksi lain.
+     *
+     * Menerima salah satu: product_id (produk satuan) ATAU paket_id (paket bundle) — tidak boleh dua-duanya.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:produk,id',
-            'quantity' => 'required|integer|min:1'
+            'penjualan_id' => 'required|exists:penjualan,id',
+            'product_id'   => 'nullable|exists:produk,id',
+            'paket_id'     => 'nullable|exists:paket,id',
+            'quantity'     => 'required|integer|min:1'
         ]);
 
-        DB::transaction(function () use ($request) {
+        if (!$request->product_id && !$request->paket_id) {
+            return back()->with('errors', 'Pilih produk atau paket terlebih dahulu');
+        }
 
-            $sale = Penjualan::where('user_id', Auth::id())
+        if ($request->product_id && $request->paket_id) {
+            return back()->with('errors', 'Tidak bisa memilih produk dan paket sekaligus');
+        }
+
+        $errorMessage = null;
+
+        DB::transaction(function () use ($request, &$errorMessage) {
+
+            // Ambil transaksi PERSIS berdasarkan penjualan_id yang dikirim dari halaman
+            // (bukan nebak "transaksi OPEN milik user" seperti sebelumnya),
+            // sekaligus pastikan itu memang transaksi milik kasir ini & masih OPEN.
+            $sale = Penjualan::where('id', $request->penjualan_id)
+                ->where('user_id', Auth::id())
                 ->where('status', 'OPEN')
                 ->firstOrFail();
 
-            $product = Produk::lockForUpdate()->findOrFail($request->product_id);
+            if ($request->product_id) {
+                $entity     = Produk::lockForUpdate()->findOrFail($request->product_id);
+                $idColumn   = 'produk_id';
+                $labelJenis = 'Produk';
+            } else {
+                $entity     = Paket::lockForUpdate()->findOrFail($request->paket_id);
+                $idColumn   = 'paket_id';
+                $labelJenis = 'Paket';
+            }
 
             // Cek stok
-            if ($product->stok < $request->quantity) {
-                return redirect()->route('penjualan.create')->with('errors', 'Produk stok tidak mencukupi');
+            if ($entity->stok < $request->quantity) {
+                $errorMessage = $labelJenis . ' stok tidak mencukupi';
+                return;
             }
 
             // Kurangi stok
-            $product->decrement('stok', $request->quantity);
+            $entity->decrement('stok', $request->quantity);
 
-            // Update / insert item penjualan
+            // Update / insert item penjualan, dicari berdasarkan kolom yang relevan
+            // (produk_id untuk produk satuan, paket_id untuk paket) DAN penjualan_id yang tepat
             $item = ItemPenjualan::where('penjualan_id', $sale->id)
-                ->where('produk_id', $product->id)
+                ->where($idColumn, $entity->id)
                 ->lockForUpdate()
                 ->first();
 
@@ -66,9 +102,10 @@ class ItemPenjualanController extends Controller
                 // CREATE
                 $item = new ItemPenjualan([
                     'penjualan_id' => $sale->id,
-                    'produk_id' => $product->id,
-                    'kuantitas' => $request->quantity,
-                    'harga_satuan' => $product->harga_jual,
+                    'produk_id'    => $idColumn === 'produk_id' ? $entity->id : null,
+                    'paket_id'     => $idColumn === 'paket_id' ? $entity->id : null,
+                    'kuantitas'    => $request->quantity,
+                    'harga_satuan' => $entity->harga_jual,
                 ]);
             }
 
@@ -80,6 +117,10 @@ class ItemPenjualanController extends Controller
             $sale->total_pembayaran = $sale->itemPenjualan()->sum('subtotal');
             $sale->save();
         });
+
+        if ($errorMessage) {
+            return back()->with('errors', $errorMessage);
+        }
 
         return back();
     }
@@ -109,15 +150,31 @@ class ItemPenjualanController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
-        DB::transaction(function () use ($request, $itempenjualan) {
+        $errorMessage = null;
 
-            $produk = $itempenjualan->produk()->lockForUpdate()->first();
+        DB::transaction(function () use ($request, $itempenjualan, &$errorMessage) {
+
+            // Ambil entitas terkait (produk ATAU paket), sesuai isi baris item ini
+            $entity = $itempenjualan->produk_id
+                ? Produk::lockForUpdate()->find($itempenjualan->produk_id)
+                : Paket::lockForUpdate()->find($itempenjualan->paket_id);
 
             $selisih = $request->quantity - $itempenjualan->kuantitas;
 
-            // Jika qty berkurang -> kwmbalikan stok
-            if ($selisih < 0) {
-                $produk->increment('stok', abs($selisih));
+            // Kalau qty nambah, pastikan stoknya cukup dulu
+            if ($selisih > 0 && $entity && $entity->stok < $selisih) {
+                $errorMessage = 'Stok tidak mencukupi untuk jumlah tersebut';
+                return;
+            }
+
+            if ($entity) {
+                if ($selisih < 0) {
+                    // qty berkurang -> kembalikan stok
+                    $entity->increment('stok', abs($selisih));
+                } elseif ($selisih > 0) {
+                    // qty bertambah -> kurangi stok
+                    $entity->decrement('stok', $selisih);
+                }
             }
 
             // Update item
@@ -133,6 +190,10 @@ class ItemPenjualanController extends Controller
             ]);
         });
 
+        if ($errorMessage) {
+            return back()->with('errors', $errorMessage);
+        }
+
         return back();
     }
 
@@ -145,11 +206,14 @@ class ItemPenjualanController extends Controller
 
         DB::transaction(function () use ($itempenjualan) {
 
-            $produk = $itempenjualan->produk;
-            $sale   = $itempenjualan->penjualan;
+            $sale = $itempenjualan->penjualan;
 
-            // Kembalikan stok
-            $produk->increment('stok', $itempenjualan->kuantitas);
+            // Kembalikan stok ke produk ATAU paket, sesuai jenis item ini
+            if ($itempenjualan->produk_id) {
+                $itempenjualan->produk?->increment('stok', $itempenjualan->kuantitas);
+            } elseif ($itempenjualan->paket_id) {
+                $itempenjualan->paket?->increment('stok', $itempenjualan->kuantitas);
+            }
 
             // Hapus item
             $itempenjualan->delete();

@@ -130,6 +130,58 @@
         font-size: 12px;
     }
 
+    /* Jam Operasional: baris hari + jam sejajar kiri-kanan */
+    .jam-list .jam-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        color: #334155;
+        padding: 8px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+
+    .jam-list .jam-item:last-child {
+        border-bottom: none;
+    }
+
+    .jam-list .jam-item span:first-child {
+        font-weight: 600;
+        color: #1E293B;
+    }
+
+    /* Kontak: ikon + teks + link */
+    .kontak-list .kontak-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: #334155;
+        padding: 8px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+
+    .kontak-list .kontak-item:last-child {
+        border-bottom: none;
+    }
+
+    .kontak-list .kontak-item i {
+        color: #16A34A;
+        font-size: 16px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .kontak-list .kontak-item a {
+        color: #334155;
+        text-decoration: none;
+    }
+
+    .kontak-list .kontak-item a:hover {
+        color: #2563EB;
+        text-decoration: underline;
+    }
+
     @media (max-width: 576px) {
 
         .feature-grid,
@@ -188,6 +240,44 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Jam Operasional -->
+            <div class="card">
+                <div class="card-header text-center">
+                    Jam Operasional
+                </div>
+                <div class="card-body">
+                    <div class="jam-list">
+                        <div class="jam-item">
+                            <span>Senin - Jumat</span>
+                            <span>10.00 - 22.00 WIB</span>
+                        </div>
+                        <div class="jam-item">
+                            <span>Sabtu - Minggu</span>
+                            <span>10.00 - 23.00 WIB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kontak -->
+            {{-- <div class="card">
+                <div class="card-header text-center">
+                    Kontak
+                </div>
+                <div class="card-body">
+                    <div class="kontak-list">
+                        <div class="kontak-item">
+                            <i class="bi bi-whatsapp"></i>
+                            <a href="https://wa.me/6281234567890" target="_blank">0812-3456-7890</a>
+                        </div>
+                        <div class="kontak-item">
+                            <i class="bi bi-instagram"></i>
+                            <a href="https://instagram.com/kedaimercon" target="_blank">@kedaimercon</a>
+                        </div>
+                    </div>
+                </div>
+            </div> --}}
 
             <!-- Fitur Utama -->
             {{-- <div class="card">

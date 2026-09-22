@@ -249,6 +249,7 @@
                                     <!-- Tambahkan text-start pada judul kolom -->
                                     <th scope="col" class="text-start">No</th>
                                     <th scope="col" class="text-start">Nama</th>
+                                    <th scope="col" class="text-start">Jenis</th>
                                     <th scope="col" class="text-start">Stok</th>
                                 </tr>
                             </thead>
@@ -259,13 +260,18 @@
                                         <th class="text-start">{{ $produkStokRendah->firstItem() + $index }}</th>
                                         <td class="text-start">{{ $produk->nama }}</td>
                                         <td class="text-start">
+                                            <span class="badge {{ ($produk->jenis_item ?? 'Produk') === 'Paket' ? 'bg-info text-dark' : 'bg-secondary' }}">
+                                                {{ $produk->jenis_item ?? 'Produk' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-start">
                                             <span class="text-warning-custom">{{ $produk->stok }}</span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted py-4">
-                                            Seluruh produk berada dalam kondisi stok aman.
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            Seluruh produk & paket berada dalam kondisi stok aman.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -280,6 +286,7 @@
                                 <tr>
                                     <th scope="col">No</th>
                                     <th scope="col">Nama</th>
+                                    <th scope="col">Jenis</th>
                                     <th scope="col">Stok</th>
                                 </tr>
                             </thead>
@@ -288,14 +295,19 @@
                                     <tr>
                                         <th>{{ $produkStokHabis->firstItem() + $index }}</th>
                                         <td>{{ $produk->nama }}</td>
+                                        <td>
+                                            <span class="badge {{ ($produk->jenis_item ?? 'Produk') === 'Paket' ? 'bg-info text-dark' : 'bg-secondary' }}">
+                                                {{ $produk->jenis_item ?? 'Produk' }}
+                                            </span>
+                                        </td>
                                         <!-- Cari bagian ini di baris stok habis, tambahkan class text-danger-custom -->
                                         <td><span class="text-danger-custom">{{ $produk->stok }}</span></td>
 
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center">
-                                            Seluruh produk berada dalam kondisi stok aman.
+                                        <td colspan="4" class="text-center">
+                                            Seluruh produk & paket berada dalam kondisi stok aman.
                                         </td>
                                     </tr>
                                 @endforelse

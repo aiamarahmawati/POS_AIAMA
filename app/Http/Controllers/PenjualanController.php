@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchRequest;
+use App\Models\Paket;
 use App\Models\Penjualan;
 use App\Models\Produk;
 use Illuminate\Http\Request;
@@ -42,35 +43,22 @@ class PenjualanController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     *
+     * PERUBAHAN: sebelumnya pakai firstOrCreate (nyambung ke transaksi OPEN
+     * yang sudah ada kalau masih ada), sekarang SELALU bikin transaksi baru,
+     * lalu diarahkan ke halaman edit transaksi itu. Ini yang memungkinkan
+     * kasir mulai transaksi baru walau masih ada transaksi lain yang tertunda.
      */
-    public function create(SearchRequest $request)
+    public function create()
     {
-        $sale = Penjualan::firstOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'status' => 'OPEN'
-            ],
-            [
-                'total_pembayaran' => 0,
-                'metode_pembayaran' => 'CASH'
-            ]
-        );
+        $sale = Penjualan::create([
+            'user_id'           => Auth::id(),
+            'status'            => 'OPEN',
+            'total_pembayaran'  => 0,
+            'metode_pembayaran' => 'CASH',
+        ]);
 
-        $keyword = $request->input('search');
-
-        if ($keyword) {
-            $products = Produk::when($keyword, function ($query) use ($keyword) {
-                $query->where('nama', 'like', '%' . $keyword . '%');
-            })
-                ->orderBy('nama')
-                ->get();
-        } else {
-            $products = Produk::orderBy('nama')->get();
-        }
-
-        $mode = 'create';
-
-        return view('penjualan.pos', compact('sale', 'products', 'mode'));
+        return redirect()->route('penjualan.edit', $sale);
     }
 
     /**
@@ -87,8 +75,8 @@ class PenjualanController extends Controller
     // GANTI nama fungsi menjadi show
     public function show($id)
     {
-        // Mengambil data penjualan beserta kasir (user) dan item produk yang dibeli
-        $sale = Penjualan::with(['user', 'itemPenjualan.produk'])->findOrFail($id);
+        // Mengambil data penjualan beserta kasir (user) dan item produk/paket yang dibeli
+        $sale = Penjualan::with(['user', 'itemPenjualan.produk', 'itemPenjualan.paket'])->findOrFail($id);
 
         // Tetap mengarahkan ke halaman detail baru Anda
         return view('penjualan.detail', compact('sale'));
@@ -98,18 +86,45 @@ class PenjualanController extends Controller
 
     /**
      * Show the form for editing the specified resource.
+     *
+     * PERUBAHAN: sekarang halaman ini jadi satu-satunya halaman kerja POS,
+     * dipakai baik untuk transaksi yang baru saja dibuat (dari create())
+     * maupun transaksi tertunda yang dibuka lagi lewat tombol Edit di index.
+     * Karena itu ditambahkan: (1) pencarian produk/paket seperti yang
+     * sebelumnya ada di create(), dan (2) pengecekan supaya kasir tidak
+     * bisa membuka transaksi tertunda milik kasir lain lewat tebak-tebak URL.
      */
-    public function edit(Penjualan $penjualan)
+    public function edit(SearchRequest $request, Penjualan $penjualan)
     {
-        $sale   = $penjualan;
+        $sale = $penjualan;
 
         abort_if($sale->status === 'COMPLETED', 403);
 
+        // Kasir hanya boleh buka transaksinya sendiri; admin boleh buka semua
+        if (Auth::user()->role->name === 'kasir' && $sale->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $sale->load('itemPenjualan');
-        $products = Produk::orderBy('nama')->get();
+
+        $keyword = $request->input('search');
+
+        if ($keyword) {
+            $products = Produk::where('nama', 'like', '%' . $keyword . '%')
+                ->orderBy('nama')
+                ->get();
+
+            $packages = Paket::where('nama', 'like', '%' . $keyword . '%')
+                ->orderBy('nama')
+                ->get();
+        } else {
+            $products = Produk::orderBy('nama')->get();
+            $packages = Paket::orderBy('nama')->get();
+        }
+
         $mode = 'edit';
 
-        return view('penjualan.pos', compact('sale', 'products', 'mode'));
+        return view('penjualan.pos', compact('sale', 'products', 'packages', 'mode'));
     }
 
     /**
@@ -188,8 +203,12 @@ class PenjualanController extends Controller
         DB::transaction(function () use ($penjualan) {
 
             foreach ($penjualan->itemPenjualan as $item) {
-                // kembalikan stok
-                $item->produk->increment('stok', $item->kuantitas);
+                // kembalikan stok, sesuai jenis item-nya (produk satuan atau paket)
+                if ($item->produk_id) {
+                    $item->produk?->increment('stok', $item->kuantitas);
+                } elseif ($item->paket_id) {
+                    $item->paket?->increment('stok', $item->kuantitas);
+                }
             }
 
             // hapus item

@@ -218,11 +218,7 @@
     @media print {
         @page {
             size: auto;
-            margin: 0mm;
-        }
-
-        body {
-            padding: 15mm !important;
+            margin: 10mm;
         }
 
         nav,
@@ -249,10 +245,18 @@
             padding: 0 !important;
         }
 
+        /* Kuncinya di sini: tetap batasi lebar kertas struk & taruh di tengah,
+           jangan dibiarkan melebar 100% halaman */
+        .receipt-wrapper {
+            display: flex !important;
+            justify-content: center !important;
+        }
+
         .receipt-paper {
             box-shadow: none !important;
-            max-width: 100% !important;
-            padding: 0 !important;
+            width: 320px !important;
+            max-width: 320px !important;
+            padding: 16px 20px !important;
         }
 
         .receipt-paper::after {
@@ -316,7 +320,10 @@
             @foreach($sale->itemPenjualan as $item)
             <div class="receipt-item-row">
                 <div class="receipt-item-name">
-                    {{ $item->produk?->nama_produk ?? $item->produk?->nama ?? $item->produk?->nama_barang ?? 'Produk' }}
+                    {{ $item->nama_item }}
+                    @if ($item->is_paket)
+                        <span style="font-size: 10px; color: #6b7280;">(Paket)</span>
+                    @endif
                 </div>
                 <div class="receipt-item-qty">x{{ $item->kuantitas ?? $item->qty }}</div>
                 <div class="receipt-item-total">Rp {{ number_format($item->subtotal) }}</div>

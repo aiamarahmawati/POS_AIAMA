@@ -337,7 +337,7 @@ span.badge-role.kasir {
     <!-- Tambahkan pembungkus kontainer ini agar jarak kanan kirinya seimbang -->
     <div class="container mt-4">
 
-        <h1 class="mb-4">Users</h1>
+        <h1 class="mb-4">Pengguna</h1>
 
         <div class="table-filter-action">
             <form action="{{ route('admin.users') }}" method="GET" class="search-wrapper">

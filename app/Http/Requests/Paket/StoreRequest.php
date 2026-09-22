@@ -21,7 +21,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'nama'        => ['required', 'string', 'max:255'],
-            'foto'        => ['required', 'image', 'max:2048'],
+            'foto'        => ['required', 'image', 'max:3000'],
             'harga_jual'  => ['required', 'integer', 'min:0'],
             'stok'        => ['required', 'integer', 'min:0'],
             'items'                => ['required', 'array', 'min:1'],

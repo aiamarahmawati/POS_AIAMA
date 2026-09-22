@@ -167,7 +167,7 @@ div.card-header h1 {
 <div class="mb-3">
     <label class="form-label">Nama Paket</label>
     <input type="text" name="nama" class="form-control @error('nama') is-invalid @enderror"
-           value="{{ old('nama', $paket->nama ?? '') }}" autocomplete="off" placeholder="Contoh: Paket Hemat">
+           value="{{ old('nama', $paket->nama ?? '') }}" autocomplete="off">
     @error('nama')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
